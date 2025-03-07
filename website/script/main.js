@@ -85,6 +85,7 @@ class BeefWeb {
         });
 
         this.worker.onmessage = this.update.bind(this);
+        this.updateAll();
     }
 
     init(){
@@ -139,9 +140,10 @@ class BeefWeb {
 
     /**@private */
     getCommonColor(){
+        console.log("Getting color")
         const onLoad = (img) => {
             try {
-                this.activeItem.setColor(this.colorThief.getColor(img));
+                this.activeItem.setColor(this.colorThief.getPalette(img,5));
             } catch (error) {
                 console.error(error);
             }
@@ -175,10 +177,53 @@ class Item {
 
     /**
      * 
-     * @param {[number,number,number]} color 
+     * @param {Array<[number,number,number]>} colors
      */
-    setColor(color){
+    setColor(colors){
+        const filteredColors = colors.filter(([r, g, b]) => {
+            const [, s] = this.rgbToHsl(r, g, b);
+            return s >= 25;
+        });
+
+        const color = filteredColors.length > 0 ? filteredColors[0] : [128, 128, 128];
+
         this.color = `rgb(${color.join(",")})`;
+    }
+
+
+    /**
+     * Converts an RGB color to HSL.
+     * @param {number} r Red (0-255)
+     * @param {number} g Green (0-255)
+     * @param {number} b Blue (0-255)
+     * @returns {[number, number, number]} HSL values [hue (0-360), saturation (0-100), lightness (0-100)]
+     * @private
+     */
+    rgbToHsl(r, g, b) {
+        r /= 255;
+        g /= 255;
+        b /= 255;
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max === min) {
+            h = s = 0; // achromatic
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+
+            h *= 60;
+            s *= 100;
+        }
+        return [h, s, l];
     }
 
     update(data) {
@@ -212,7 +257,7 @@ class Item {
         Object.assign(this.playlist, item.playlist);
         Object.assign(this.time, item.time);
         Object.assign(this.columns, item.columns);
-
+        this.color = item.color;
         this.songIndex = item.songIndex;
     }
 
