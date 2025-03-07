@@ -30,6 +30,7 @@ class BeefWeb {
     worker = new Worker("./script/worker.js");
 
     elements = {
+        player: null,
         data: {
             albumArt: null,
             title: null,
@@ -42,6 +43,8 @@ class BeefWeb {
             bar: null,
         }
     }
+
+    colorThief = new ColorThief();
 
     constructor(port){
         this.port = port
@@ -85,6 +88,8 @@ class BeefWeb {
     }
 
     init(){
+        this.elements.player = document.getElementById("player");
+
         this.elements.data.albumArt = document.getElementById("playerArt");
         this.elements.data.title = document.getElementById("playerTitle");
         this.elements.data.artist = document.getElementById("playerArtist");
@@ -102,6 +107,7 @@ class BeefWeb {
         this.elements.data.album.innerText = this.activeItem.columns.album;
         
         this.elements.data.albumArt.src = this.root + this.options.artwork + "?a=" + new Date().getTime();
+        this.getCommonColor();
         this.updateTime();
     }
 
@@ -110,6 +116,8 @@ class BeefWeb {
         this.elements.progress.current.innerText = this.formatTime(this.activeItem.time.current);
         this.elements.progress.total.innerText = this.formatTime(this.activeItem.time.total);
         this.elements.progress.bar.style.width = this.activeItem.time.percent() + "%";
+        console.log(this.activeItem.color)
+        this.elements.player.style.backgroundColor = this.activeItem.color;
     }
 
     /**@private */
@@ -128,6 +136,27 @@ class BeefWeb {
         const remainingSeconds = Math.floor(seconds % 60);
         return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`; 
     }
+
+    /**@private */
+    getCommonColor(){
+        const onLoad = (img) => {
+            try {
+                this.activeItem.setColor(this.colorThief.getColor(img));
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        const img = this.elements.data.albumArt;
+        img.crossOrigin = "anonymous";
+        if (img.complete) {
+            onLoad(img);
+        } else {
+            img.addEventListener('load', function() {
+                onLoad(img);
+            });
+        }
+    }
+
 }
 
 class Item {
@@ -140,6 +169,16 @@ class Item {
         };
         this.columns = {};
         if(data) this.update(data);
+        this.color = null;
+    }
+
+
+    /**
+     * 
+     * @param {[number,number,number]} color 
+     */
+    setColor(color){
+        this.color = `rgb(${color.join(",")})`;
     }
 
     update(data) {
@@ -204,7 +243,8 @@ class Item {
         return (
             this.columns.title === item.columns.title &&
             this.columns.artist === item.columns.artist &&
-            this.columns.album === item.columns.album
+            this.columns.album === item.columns.album &&
+            this.color === item.color
         )
     }
     
