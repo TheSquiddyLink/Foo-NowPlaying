@@ -29,10 +29,17 @@ class BeefWeb {
     worker = new Worker("./script/worker.js");
 
     elements = {
-        albumArt: null,
-        title: null,
-        artist: null,
-        album: null,
+        data: {
+            albumArt: null,
+            title: null,
+            artist: null,
+            album: null,
+        },
+        progress: {
+            current: null,
+            total: null,
+            percent: null,
+        }
     }
 
     constructor(port){
@@ -54,9 +61,17 @@ class BeefWeb {
         if (!event || !event.data || !event.data.player?.activeItem) return;
         this.activeItem.update(event.data);
 
-        if(this.activeItem.compare(this.previousItem)) return;
+        if(this.compareAll()){
+            console.log("No changes detected");
+        } else if(this.compareTrack()){
+            console.log("Only time changed");
+            this.updateTime();
+        } else {
+            console.log("Track changed");
+            this.updateAll();
+        }
+
         this.previousItem.from(this.activeItem);
-        this.updateSongElements();
     }
 
     start(){
@@ -69,17 +84,43 @@ class BeefWeb {
     }
 
     init(){
-        this.elements.albumArt = document.getElementById("playerArt");
-        this.elements.title = document.getElementById("playerTitle");
-        this.elements.artist = document.getElementById("playerArtist");
-        this.elements.album = document.getElementById("playerAlbum");
+        this.elements.data.albumArt = document.getElementById("playerArt");
+        this.elements.data.title = document.getElementById("playerTitle");
+        this.elements.data.artist = document.getElementById("playerArtist");
+        this.elements.data.album = document.getElementById("playerAlbum");
+
+        this.elements.progress.current = document.getElementById("progressCurrent");
+        this.elements.progress.total = document.getElementById("progressTotal");
     }
     
     /**@private */
-    updateSongElements(){
-        this.elements.title.innerText = this.activeItem.columns.title;
-        this.elements.artist.innerText = this.activeItem.columns.artist;
-        this.elements.album.innerText = this.activeItem.columns.album;
+    updateAll(){
+        this.elements.data.title.innerText = this.activeItem.columns.title;
+        this.elements.data.artist.innerText = this.activeItem.columns.artist;
+        this.elements.data.album.innerText = this.activeItem.columns.album;
+    }
+
+    /**@private */
+    updateTime(){
+        this.elements.progress.current.innerText = this.formatTime(this.activeItem.time.current);
+        this.elements.progress.total.innerText = this.formatTime(this.activeItem.time.total);
+    }
+
+    /**@private */
+    compareAll(){
+        return this.activeItem.compareAll(this.previousItem);
+    }
+
+    /**@private */
+    compareTrack() {
+        return this.activeItem.compareTrack(this.previousItem);
+    }
+
+    /**@private */
+    formatTime(seconds){
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`; 
     }
 }
 
@@ -130,8 +171,11 @@ class Item {
         this.songIndex = item.songIndex;
     }
 
-    /**@param {Item} item  */
-    compare(item) {
+    /**
+     * @param {Item} item 
+     * @returns {boolean}
+     */
+    compareAll(item) {
         if (!(this instanceof Item) || !(item instanceof Item)) return false;
         
         return (
@@ -143,6 +187,19 @@ class Item {
             this.columns.album === item.columns.album &&
             this.columns.isPlaying === item.columns.isPlaying
         );
+    }
+
+    /**
+     * 
+     * @param {Item} item 
+     * @returns {boolean}
+     */
+    compareTrack(item) {
+        return (
+            this.columns.title === item.columns.title &&
+            this.columns.artist === item.columns.artist &&
+            this.columns.album === item.columns.album
+        )
     }
     
 }
