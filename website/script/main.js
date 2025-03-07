@@ -4,6 +4,7 @@ class BeefWeb {
     /**@private */
     options = {
         player: "/player",
+        artwork: "/artwork/current"
     }
 
     /**@private */
@@ -98,6 +99,8 @@ class BeefWeb {
         this.elements.data.title.innerText = this.activeItem.columns.title;
         this.elements.data.artist.innerText = this.activeItem.columns.artist;
         this.elements.data.album.innerText = this.activeItem.columns.album;
+        
+        this.elements.data.albumArt.src = this.root + this.options.artwork + "?a=" + new Date().getTime();
     }
 
     /**@private */
