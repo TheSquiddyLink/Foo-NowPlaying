@@ -159,6 +159,7 @@ class BeefWeb {
         this.elements.data.album.innerText = this.activeItem.columns.album;
         
         this.elements.data.albumArt.src = this.root + this.options.artwork + "?a=" + new Date().getTime();
+        if(this.elements.player.style.animation != this.getAnimation()) this.fade()
         this.getCommonColor();
         this.updateTime();
     }
@@ -170,6 +171,9 @@ class BeefWeb {
         this.elements.progress.bar.style.width = this.activeItem.time.percent() + "%";
         console.log(this.activeItem.color)
         this.elements.player.style.backgroundColor = this.activeItem.color;
+        console.log("Secondary Color:", this.activeItem.allColors)
+        this.elements.progress.bar.style.backgroundColor = this.activeItem.allColors[1]
+        console.log(this.elements.progress.bar.style)
     }
 
     /**@private */
@@ -233,6 +237,7 @@ class Item {
         this.columns = {};
         if(data) this.update(data);
         this.color = null;
+        this.allColors = [];
     }
 
 
@@ -247,7 +252,7 @@ class Item {
         });
 
         const color = filteredColors.length > 0 ? filteredColors[0] : [128, 128, 128];
-
+        this.allColors = filteredColors.map((item) => `rgb(${item.join(",")})`);
         this.color = `rgb(${color.join(",")})`;
     }
 
