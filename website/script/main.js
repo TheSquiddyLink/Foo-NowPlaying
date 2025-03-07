@@ -20,17 +20,27 @@ class BeefWeb {
         "%path%",
     ]
 
+    previousItem = new Item();
+
     activeItem = new Item();
 
     frequency = 500;
 
     worker = new Worker("./script/worker.js");
 
+    elements = {
+        albumArt: null,
+        title: null,
+        artist: null,
+        album: null,
+    }
+
     constructor(port){
         this.port = port
         this.root = "http://localhost:" + port + "/api"
     }
 
+    /**@private */
     getColumnsQuery() {
         return `?columns=${this.columns.join(",")}`;
     }
@@ -38,11 +48,15 @@ class BeefWeb {
     /**
      * 
      * @param {MessageEvent<any>} event 
+     * @private
      */
     async update(event){
         if (!event || !event.data || !event.data.player?.activeItem) return;
         this.activeItem.update(event.data);
-        console.log(this.activeItem);
+
+        if(this.activeItem.compare(this.previousItem)) return;
+        this.previousItem.from(this.activeItem);
+        this.updateSongElements();
     }
 
     start(){
@@ -52,6 +66,20 @@ class BeefWeb {
         });
 
         this.worker.onmessage = this.update.bind(this);
+    }
+
+    init(){
+        this.elements.albumArt = document.getElementById("playerArt");
+        this.elements.title = document.getElementById("playerTitle");
+        this.elements.artist = document.getElementById("playerArtist");
+        this.elements.album = document.getElementById("playerAlbum");
+    }
+    
+    /**@private */
+    updateSongElements(){
+        this.elements.title.innerText = this.activeItem.columns.title;
+        this.elements.artist.innerText = this.activeItem.columns.artist;
+        this.elements.album.innerText = this.activeItem.columns.album;
     }
 }
 
@@ -89,14 +117,42 @@ class Item {
         this.columns.elapsed = activeItem.columns?.[8] ?? 0;
         this.columns.path = activeItem.columns?.[9] ?? "";
     }
+
+    /**
+     * 
+     * @param {Item} item 
+     */
+    from(item) {
+        Object.assign(this.playlist, item.playlist);
+        Object.assign(this.time, item.time);
+        Object.assign(this.columns, item.columns);
+
+        this.songIndex = item.songIndex;
+    }
+
+    /**@param {Item} item  */
+    compare(item) {
+        if (!(this instanceof Item) || !(item instanceof Item)) return false;
+        
+        return (
+            this.songIndex === item.songIndex &&
+            this.time.current === item.time.current &&
+            this.time.total === item.time.total &&
+            this.columns.title === item.columns.title &&
+            this.columns.artist === item.columns.artist &&
+            this.columns.album === item.columns.album &&
+            this.columns.isPlaying === item.columns.isPlaying
+        );
+    }
+    
 }
 
 
 
-async function main(){
+document.addEventListener("DOMContentLoaded", () => {
     const beef = new BeefWeb(8880);
 
-    beef.start();
-}
+    beef.init();
 
-main();
+    beef.start();
+})
