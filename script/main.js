@@ -35,6 +35,10 @@ class BeefWeb {
 
     reconnectFrequency = 2000;
 
+    fadeDistance = 1;
+
+    fadeDuration = 2000;
+
     worker = new Worker("./script/worker.js");
 
     elements = {
@@ -88,6 +92,10 @@ class BeefWeb {
             this.updateAll();
         }
 
+        if(this.activeItem.time.current >= this.activeItem.time.total - this.fadeDistance){
+            this.fade()
+        }
+
         this.previousItem.from(this.activeItem);
     }
 
@@ -130,6 +138,8 @@ class BeefWeb {
         this.elements.data.albumArt.onerror = () => {
             this.elements.data.albumArt.src = "/assets/unknown.png"; // Set your placeholder image path
         };
+
+        this.elements.player.addEventListener("animationend", () => this.elements.player.style.animation = "none")
     }
 
     async connect(){
@@ -198,6 +208,16 @@ class BeefWeb {
                 onLoad(img);
             });
         }
+    }
+
+    /**@private */
+    fade(){
+        this.elements.player.style.animation = this.getAnimation();
+    }
+
+
+    getAnimation(){
+        return `fade ${this.fadeDuration}ms`
     }
 
 }
