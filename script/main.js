@@ -1,6 +1,12 @@
+const STATUS = {
+    online: 1,
+    offline: 0,
+}
 
 class BeefWeb {
-    
+
+    status = STATUS.offline
+
     /**@private */
     options = {
         player: "/player",
@@ -26,6 +32,8 @@ class BeefWeb {
     activeItem = new Item();
 
     frequency = 500;
+
+    reconnectFrequency = 2000;
 
     worker = new Worker("./script/worker.js");
 
@@ -63,7 +71,12 @@ class BeefWeb {
      */
     async update(event){
         if (!event || !event.data || !event.data.player?.activeItem) return;
-        this.activeItem.update(event.data);
+        try {
+            this.activeItem.update(event.data);
+        } catch (event) {
+            this.status = STATUS.offline;
+        }
+        
 
         if(this.compareAll()){
             console.log("No changes detected");
@@ -79,6 +92,8 @@ class BeefWeb {
     }
 
     start(){
+        console.log("Starting")
+        if(this.status == STATUS.offline) return;
         this.worker.postMessage({
             url: this.root + this.options.player + this.getColumnsQuery(),
             interval: this.frequency
@@ -88,7 +103,7 @@ class BeefWeb {
         this.updateAll();
     }
 
-    init(){
+    async init(){
         this.elements.player = document.getElementById("player");
 
         this.elements.data.albumArt = document.getElementById("playerArt");
@@ -99,6 +114,32 @@ class BeefWeb {
         this.elements.progress.current = document.getElementById("progressCurrent");
         this.elements.progress.total = document.getElementById("progressTotal");
         this.elements.progress.bar = document.getElementById("progressBar");
+
+        await this.connect()
+        if(this.status == STATUS.offline){
+            console.log("Attempting to reconnect")
+            this.reconnectInterval  = setInterval(async () => {
+                await this.connect();
+                if(this.status == STATUS.online){
+                    clearInterval(this.reconnectInterval)
+                    console.log("Back online!")
+                    this.start();
+                }
+            },this.reconnectFrequency)
+        }
+        this.elements.data.albumArt.onerror = () => {
+            this.elements.data.albumArt.src = "/assets/unknown.png"; // Set your placeholder image path
+        };
+    }
+
+    async connect(){
+        try {
+            await fetch(this.root+this.options.player);
+        } catch (error){
+            this.status = STATUS.offline;
+            return;
+        }
+        this.status = STATUS.online
     }
     
     /**@private */
@@ -234,8 +275,8 @@ class Item {
         this.playlist.index = activeItem.playlistIndex;
         this.songIndex = activeItem.index;
 
-        this.time.current = activeItem.position;
-        this.time.total = activeItem.duration;
+        this.time.current = activeItem.position ?? '0:00';
+        this.time.total = activeItem.duration ?? '0:00';
 
         this.columns.isPlaying = activeItem.columns?.[0] ?? false;
         this.columns.isPaused = activeItem.columns?.[1] ?? false;
@@ -297,10 +338,10 @@ class Item {
 
 
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const beef = new BeefWeb(8880);
 
-    beef.init();
+    await beef.init();
 
     beef.start();
 })
