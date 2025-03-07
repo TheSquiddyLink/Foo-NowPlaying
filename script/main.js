@@ -5,6 +5,7 @@ const STATUS = {
 
 class BeefWeb {
 
+    /**@private */
     status = STATUS.offline
 
     /**@private */
@@ -27,8 +28,10 @@ class BeefWeb {
         "%path%",
     ]
 
+    /**@private */
     previousItem = new Item();
 
+    /**@private */
     activeItem = new Item();
 
     frequency = 500;
@@ -39,8 +42,10 @@ class BeefWeb {
 
     fadeDuration = 2000;
 
+    /**@private */
     worker = new Worker("./script/worker.js");
 
+    /**@private */
     elements = {
         player: null,
         data: {
@@ -56,6 +61,7 @@ class BeefWeb {
         }
     }
 
+    /**@private */
     colorThief = new ColorThief();
 
     constructor(port){
@@ -112,6 +118,8 @@ class BeefWeb {
     }
 
     async init(){
+
+        // await this.loadConfig();
         this.elements.player = document.getElementById("player");
 
         this.elements.data.albumArt = document.getElementById("playerArt");
@@ -136,12 +144,21 @@ class BeefWeb {
             },this.reconnectFrequency)
         }
         this.elements.data.albumArt.onerror = () => {
-            this.elements.data.albumArt.src = "/assets/unknown.png"; // Set your placeholder image path
+            this.elements.data.albumArt.src = "./assets/unknown.png"; // Set your placeholder image path
         };
 
         this.elements.player.addEventListener("animationend", () => this.elements.player.style.animation = "none")
     }
 
+    async loadConfig(){
+        const response = await fetch('./config.json');
+        const data = await response.json();
+
+        this.frequency = data.frequency;
+        this.reconnectFrequency = data.reconnectFrequency;
+        this.fadeDistance = data.fadeDistance;
+        this.fadeDuration = data.fadeDuration;
+    }
     async connect(){
         try {
             await fetch(this.root+this.options.player);
@@ -248,7 +265,7 @@ class Item {
     setColor(colors){
         const filteredColors = colors.filter(([r, g, b]) => {
             const [, s] = this.rgbToHsl(r, g, b);
-            return s >= 25;
+            return s >= 30;
         });
 
         const color = filteredColors.length > 0 ? filteredColors[0] : [128, 128, 128];
