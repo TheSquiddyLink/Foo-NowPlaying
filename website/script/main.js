@@ -39,7 +39,7 @@ class BeefWeb {
         progress: {
             current: null,
             total: null,
-            percent: null,
+            bar: null,
         }
     }
 
@@ -92,6 +92,7 @@ class BeefWeb {
 
         this.elements.progress.current = document.getElementById("progressCurrent");
         this.elements.progress.total = document.getElementById("progressTotal");
+        this.elements.progress.bar = document.getElementById("progressBar");
     }
     
     /**@private */
@@ -101,12 +102,14 @@ class BeefWeb {
         this.elements.data.album.innerText = this.activeItem.columns.album;
         
         this.elements.data.albumArt.src = this.root + this.options.artwork + "?a=" + new Date().getTime();
+        this.updateTime();
     }
 
     /**@private */
     updateTime(){
         this.elements.progress.current.innerText = this.formatTime(this.activeItem.time.current);
         this.elements.progress.total.innerText = this.formatTime(this.activeItem.time.total);
+        this.elements.progress.bar.style.width = this.activeItem.time.percent() + "%";
     }
 
     /**@private */

@@ -21,3 +21,15 @@
 #playerArtist {
     font-size: 1.2em;
 }
+
+.progressBarContainer {
+    width: 100%;
+    height: 30px;
+    background-color: red;
+}
+
+#progressBar {
+    width: 0%;
+    height: 100%;
+    background-color: blue;
+}
