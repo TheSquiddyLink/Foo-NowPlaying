@@ -47,18 +47,18 @@ class BeefWeb {
 
     /**@private */
     elements = {
-        player: null,
+        player: new Element(),
         data: {
-            albumArt: null,
-            title: null,
-            artist: null,
-            album: null,
+            albumArt: new Element(),
+            title: new Element(),
+            artist: new Element(),
+            album: new Element(),
         },
         progress: {
-            current: null,
-            total: null,
-            bar: null,
-            container: null,
+            current: new Element(),
+            total: new Element(),
+            bar: new Element(),
+            container: new Element(),
         }
     }
 
@@ -122,22 +122,22 @@ class BeefWeb {
     async init(){
 
         // await this.loadConfig();
-        this.elements.player = document.getElementById("player");
+        this.elements.player.setElement(document.getElementById("player"));
 
-        let type = this.elements.player.getAttribute("type")
+        let type = this.elements.player.element.getAttribute("type")
         this.type = type ?? this.type
 
         console.log(this.type)
-        this.elements.data.albumArt = document.getElementById("playerArt");
-        this.elements.data.title = document.getElementById("playerTitle");
-        this.elements.data.artist = document.getElementById("playerArtist");
-        this.elements.data.album = document.getElementById("playerAlbum");
+        this.elements.data.albumArt.setElement(document.getElementById("playerArt"));
+        this.elements.data.title.setElement(document.getElementById("playerTitle"));
+        this.elements.data.artist.setElement(document.getElementById("playerArtist"));
+        this.elements.data.album.setElement(document.getElementById("playerAlbum"));
 
-        this.elements.progress.current = document.getElementById("progressCurrent");
-        this.elements.progress.total = document.getElementById("progressTotal");
-        this.elements.progress.bar = document.getElementById("progressBar");
+        this.elements.progress.current.setElement(document.getElementById("progressCurrent"));
+        this.elements.progress.total.setElement(document.getElementById("progressTotal"));
+        this.elements.progress.bar.setElement(document.getElementById("progressBar"));
 
-        this.elements.progress.container = document.getElementById("progressBarContainer")
+        this.elements.progress.container.setElement(document.getElementById("progressBarContainer"))
 
         await this.connect()
         if(this.status == STATUS.offline){
@@ -151,13 +151,13 @@ class BeefWeb {
                 }
             },this.reconnectFrequency)
         }
-        if(this.elements.data.albumArt){
-            this.elements.data.albumArt.onerror = () => {
-                this.elements.data.albumArt.src = "./assets/unknown.png"; // Set your placeholder image path
+        if(this.elements.data.albumArt.element){
+            this.elements.data.albumArt.element.onerror = () => {
+                this.elements.data.albumArt.setAttribute("src", "./assets/unknown.png"); // Set your placeholder image path
             };
         }
      
-        if(this.elements.player) this.elements.player.addEventListener("animationend", () => this.elements.player.style.animation = "none")
+        if(this.elements.player) this.elements.player.element.addEventListener("animationend", () => this.elements.player.setStyle("animation","none"))
     }
 
     async loadConfig(){
@@ -181,58 +181,29 @@ class BeefWeb {
     
     /**@private */
     updateAll(){
-        this.setText(this.elements.data.title, this.activeItem.columns.title);
-        this.setText(this.elements.data.artist, this.activeItem.columns.artist);
-        this.setText(this.elements.data.album, this.activeItem.columns.album)
+        this.elements.data.title.setText(this.activeItem.columns.title);
+        this.elements.data.artist.setText(this.activeItem.columns.artist);
+        this.elements.data.album.setText(this.activeItem.columns.album)
         
-        this.setAttribute(this.elements.data.albumArt, "src", this.root + this.options.artwork + "?a=" + new Date().getTime());
+        this.elements.data.albumArt.setAttribute("src", this.root + this.options.artwork + "?a=" + new Date().getTime());
 
-        if(this.elements.player && this.elements.player.style.animation != this.getAnimation()) this.fade()
+        if(this.elements.player && this.elements.player.element.style.animation != this.getAnimation()) this.fade()
         this.getCommonColor();
         this.updateTime();
     }
 
-    /**
-     * 
-     * @param {?HTMLElement} element 
-     * @param {string} attribute 
-     * @param {*} value 
-     * @private
-     */
-    setAttribute(element, attribute, value){
-        if(element) element.setAttribute(attribute, value)
-    }
-    /**
-     * 
-     * @param {?HTMLElement} element 
-     * @param {*} value 
-     * @private
-     */
-    setText(element, value){
-        if(element) element.innerHTML = value;
-    }
-
-    /**
-     * 
-     * @param {?HTMLElement} element 
-     * @param {string} property 
-     * @param {*} value 
-     */
-    setStyle(element, property, value){
-        if(element) element.style[property] = value;
-    }
     /**@private */
     updateTime(){
-        this.setText(this.elements.progress.current, this.formatTime(this.activeItem.time.current));
-        this.setText(this.elements.progress.total, this.formatTime(this.activeItem.time.total));
-        this.setStyle(this.elements.progress.bar, "width", this.activeItem.time.percent()+"%")
+        this.elements.progress.current.setText(this.formatTime(this.activeItem.time.current));
+        this.elements.progress.total.setText(this.formatTime(this.activeItem.time.total));
+        this.elements.progress.bar.setStyle("width", this.activeItem.time.percent()+"%")
 
-        this.setStyle(this.elements.player, "backgroundColor", this.activeItem.color)
-        this.setStyle(this.elements.player, "color", this.activeItem.textColor);
+        this.elements.player.setStyle("backgroundColor", this.activeItem.color)
+        this.elements.player.setStyle("color", this.activeItem.textColor);
         
-        this.setStyle(this.elements.progress.container, "backgroundColor", this.activeItem.allColors[2]);
+        this.elements.progress.container.setStyle("backgroundColor", this.activeItem.allColors[2]);
 
-        this.setStyle(this.elements.progress.bar, "backgroundColor", this.activeItem.textColor)
+        this.elements.progress.bar.setStyle("backgroundColor", this.activeItem.textColor)
     }
 
     /**@private */
@@ -262,7 +233,7 @@ class BeefWeb {
                 console.error(error);
             }
         }
-        const img = this.elements.data.albumArt;
+        const img = this.elements.data.albumArt.element;
         if(!img) return
         img.crossOrigin = "anonymous";
         if (img.complete) {
@@ -276,7 +247,7 @@ class BeefWeb {
 
     /**@private */
     fade(){
-        this.elements.player.style.animation = this.getAnimation();
+        this.elements.player.setStyle("animation", this.getAnimation());
     }
 
 
@@ -425,7 +396,44 @@ class Item {
     
 }
 
+class Element {
 
+
+    /**
+     * @type {?HTMLElement}
+     */
+    element;
+    /**
+     * 
+     * @param {HTMLElement} element 
+     */
+    setElement(element){
+        this.element = element;
+    }
+
+
+    /**
+     * @param {string} attribute 
+     * @param {*} value 
+     */
+    setAttribute(attribute, value){
+        if(this.element) this.element.setAttribute(attribute, value)
+    }
+    /**
+     * @param {*} value 
+     */
+    setText(value){
+        if(this.element) this.element.innerHTML = value;
+    }
+
+    /**
+     * @param {string} property 
+     * @param {*} value 
+     */
+    setStyle(property, value){
+        if(this.element) this.element.style[property] = value;
+    }
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
     const beef = new BeefWeb(8880);
