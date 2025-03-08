@@ -174,14 +174,35 @@ class BeefWeb {
     
     /**@private */
     updateAll(){
-        this.elements.data.title.innerText = this.activeItem.columns.title;
-        this.elements.data.artist.innerText = this.activeItem.columns.artist;
-        this.elements.data.album.innerText = this.activeItem.columns.album;
+        this.setText(this.elements.data.title, this.activeItem.columns.title);
+        this.setText(this.elements.data.artist, this.activeItem.columns.artist);
+        this.setText(this.elements.data.album, this.activeItem.columns.album)
         
-        this.elements.data.albumArt.src = this.root + this.options.artwork + "?a=" + new Date().getTime();
+        this.setAttribute(this.elements.data.albumArt, "src", this.root + this.options.artwork + "?a=" + new Date().getTime());
+
         if(this.elements.player.style.animation != this.getAnimation()) this.fade()
         this.getCommonColor();
         this.updateTime();
+    }
+
+    /**
+     * 
+     * @param {?HTMLElement} element 
+     * @param {string} attribute 
+     * @param {*} value 
+     * @private
+     */
+    setAttribute(element, attribute, value){
+        if(element) element.setAttribute(attribute, value)
+    }
+    /**
+     * 
+     * @param {?HTMLElement} element 
+     * @param {*} value 
+     * @private
+     */
+    setText(element, value){
+        if(element) element.innerHTML = value;
     }
 
     /**@private */
