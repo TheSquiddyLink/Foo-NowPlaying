@@ -58,6 +58,7 @@ class BeefWeb {
             current: null,
             total: null,
             bar: null,
+            container: null,
         }
     }
 
@@ -131,6 +132,8 @@ class BeefWeb {
         this.elements.progress.total = document.getElementById("progressTotal");
         this.elements.progress.bar = document.getElementById("progressBar");
 
+        this.elements.progress.container = document.getElementById("progressBarContainer")
+
         await this.connect()
         if(this.status == STATUS.offline){
             console.log("Attempting to reconnect")
@@ -188,8 +191,11 @@ class BeefWeb {
         this.elements.progress.bar.style.width = this.activeItem.time.percent() + "%";
         console.log(this.activeItem.color)
         this.elements.player.style.backgroundColor = this.activeItem.color;
+        this.elements.player.style.color = this.activeItem.textColor;
+        this.elements.progress.container.style.backgroundColor = this.activeItem.allColors[2];
+
         console.log("Secondary Color:", this.activeItem.allColors)
-        this.elements.progress.bar.style.backgroundColor = this.activeItem.allColors[1]
+        this.elements.progress.bar.style.backgroundColor = this.activeItem.textColor
         console.log(this.elements.progress.bar.style)
     }
 
@@ -255,6 +261,7 @@ class Item {
         if(data) this.update(data);
         this.color = null;
         this.allColors = [];
+        this.textColor = "black"
     }
 
 
@@ -263,14 +270,11 @@ class Item {
      * @param {Array<[number,number,number]>} colors
      */
     setColor(colors){
-        const filteredColors = colors.filter(([r, g, b]) => {
-            const [, s] = this.rgbToHsl(r, g, b);
-            return s >= 30;
-        });
 
-        const color = filteredColors.length > 0 ? filteredColors[0] : [128, 128, 128];
-        this.allColors = filteredColors.map((item) => `rgb(${item.join(",")})`);
+        const color = colors.length > 0 ? colors[0] : [128, 128, 128];
+        this.allColors = colors.map((item) => `rgb(${item.join(",")})`);
         this.color = `rgb(${color.join(",")})`;
+        this.textColor = this.allColors[1]
     }
 
 
@@ -281,6 +285,7 @@ class Item {
      * @param {number} b Blue (0-255)
      * @returns {[number, number, number]} HSL values [hue (0-360), saturation (0-100), lightness (0-100)]
      * @private
+     * @deprecated
      */
     rgbToHsl(r, g, b) {
         r /= 255;
