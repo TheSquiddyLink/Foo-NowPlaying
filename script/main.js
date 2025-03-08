@@ -146,11 +146,13 @@ class BeefWeb {
                 }
             },this.reconnectFrequency)
         }
-        this.elements.data.albumArt.onerror = () => {
-            this.elements.data.albumArt.src = "./assets/unknown.png"; // Set your placeholder image path
-        };
-
-        this.elements.player.addEventListener("animationend", () => this.elements.player.style.animation = "none")
+        if(this.elements.data.albumArt){
+            this.elements.data.albumArt.onerror = () => {
+                this.elements.data.albumArt.src = "./assets/unknown.png"; // Set your placeholder image path
+            };
+        }
+     
+        if(this.elements.player) this.elements.player.addEventListener("animationend", () => this.elements.player.style.animation = "none")
     }
 
     async loadConfig(){
@@ -180,7 +182,7 @@ class BeefWeb {
         
         this.setAttribute(this.elements.data.albumArt, "src", this.root + this.options.artwork + "?a=" + new Date().getTime());
 
-        if(this.elements.player.style.animation != this.getAnimation()) this.fade()
+        if(this.elements.player && this.elements.player.style.animation != this.getAnimation()) this.fade()
         this.getCommonColor();
         this.updateTime();
     }
@@ -205,19 +207,27 @@ class BeefWeb {
         if(element) element.innerHTML = value;
     }
 
+    /**
+     * 
+     * @param {?HTMLElement} element 
+     * @param {string} property 
+     * @param {*} value 
+     */
+    setStyle(element, property, value){
+        if(element) element.style[property] = value;
+    }
     /**@private */
     updateTime(){
-        this.elements.progress.current.innerText = this.formatTime(this.activeItem.time.current);
-        this.elements.progress.total.innerText = this.formatTime(this.activeItem.time.total);
-        this.elements.progress.bar.style.width = this.activeItem.time.percent() + "%";
-        console.log(this.activeItem.color)
-        this.elements.player.style.backgroundColor = this.activeItem.color;
-        this.elements.player.style.color = this.activeItem.textColor;
-        this.elements.progress.container.style.backgroundColor = this.activeItem.allColors[2];
+        this.setText(this.elements.progress.current, this.formatTime(this.activeItem.time.current));
+        this.setText(this.elements.progress.total, this.formatTime(this.activeItem.time.total));
+        this.setStyle(this.elements.progress.bar, "width", this.activeItem.time.percent()+"%")
 
-        console.log("Secondary Color:", this.activeItem.allColors)
-        this.elements.progress.bar.style.backgroundColor = this.activeItem.textColor
-        console.log(this.elements.progress.bar.style)
+        this.setStyle(this.elements.player, "backgroundColor", this.activeItem.color)
+        this.setStyle(this.elements.player, "color", this.activeItem.textColor);
+        
+        this.setStyle(this.elements.progress.container, "backgroundColor", this.activeItem.allColors[2]);
+
+        this.setStyle(this.elements.progress.bar, "backgroundColor", this.activeItem.textColor)
     }
 
     /**@private */
@@ -248,6 +258,7 @@ class BeefWeb {
             }
         }
         const img = this.elements.data.albumArt;
+        if(!img) return
         img.crossOrigin = "anonymous";
         if (img.complete) {
             onLoad(img);
