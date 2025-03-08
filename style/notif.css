@@ -1,0 +1,20 @@
+#player {
+    opacity: 0;
+    animation-delay: 200ms;
+}
+
+
+@keyframes fadeInverse {
+    0% {
+        opacity: 0;
+    }
+    40% {
+        opacity: 1;
+    }
+    60% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}

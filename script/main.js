@@ -62,6 +62,7 @@ class BeefWeb {
         }
     }
 
+    type = "normal"
     /**@private */
     colorThief = new ColorThief();
 
@@ -99,7 +100,7 @@ class BeefWeb {
             this.updateAll();
         }
 
-        if(this.activeItem.time.current >= this.activeItem.time.total - this.fadeDistance){
+        if(this.type == "normal" && this.activeItem.time.current >= this.activeItem.time.total - this.fadeDistance){
             this.fade()
         }
 
@@ -123,6 +124,10 @@ class BeefWeb {
         // await this.loadConfig();
         this.elements.player = document.getElementById("player");
 
+        let type = this.elements.player.getAttribute("type")
+        this.type = type ?? this.type
+
+        console.log(this.type)
         this.elements.data.albumArt = document.getElementById("playerArt");
         this.elements.data.title = document.getElementById("playerTitle");
         this.elements.data.artist = document.getElementById("playerArtist");
@@ -276,7 +281,12 @@ class BeefWeb {
 
 
     getAnimation(){
-        return `fade ${this.fadeDuration}ms`
+        switch(this.type){
+            case "normal":
+                return `fade ${this.fadeDuration}ms`
+            case "notification":
+                return `fadeInverse ${this.fadeDuration*2}ms`
+        }
     }
 
 }
