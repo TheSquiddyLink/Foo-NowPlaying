@@ -391,13 +391,14 @@ class BeefWeb {
         this.queueWorker.onmessage = this.updateQueue.bind(this);
     }
     updateQueue(data) {
+        console.log(data.data)
         const newQueue = data.data.playQueue.map((item) => Item.queueItem(item));
     
-        const newQueueIndices = newQueue.map(item => item.songIndex);
+        const newQueueIndices = newQueue.map(item => item.itemIndex);
     
         this.playQueue.forEach((item, index) => {
-            if (!newQueueIndices.includes(item.songIndex)) {
-                const itemElement = document.querySelector(`[data-songindex="${item.songIndex}"]`);
+            if (!newQueueIndices.includes(item.itemIndex)) {
+                const itemElement = document.querySelector(`[data-itemindex="${item.itemIndex}"]`);
                 if (itemElement) {
                     itemElement.remove();
                 }
@@ -406,7 +407,7 @@ class BeefWeb {
         });
     
         newQueue.forEach(item => {
-            if (!this.playQueue.some(existingItem => existingItem.songIndex === item.songIndex)) {
+            if (!this.playQueue.some(existingItem => existingItem.itemIndex === item.itemIndex)) {
                 this.queueContainer.appendChild(item.createQueueItem());
                 this.playQueue.push(item);
             }
@@ -540,6 +541,7 @@ class Item {
     static queueItem(data){
         const item = new Item();
         item.setWithActiveItem(data);
+        item.itemIndex = data.itemIndex;
         return item;
     }
 
@@ -587,9 +589,9 @@ class Item {
         )
     }
     createQueueItem(){
-        console.log(this)
         const container = document.createElement("div")
-        
+        container.classList.add("queueItem")
+
         const title = document.createElement("p");
         title.innerHTML = this.columns.title;
 
@@ -598,7 +600,7 @@ class Item {
 
         const artist = document.createElement("p");
         artist.innerHTML = this.columns.artist;
-        container.setAttribute("data-songindex", this.songIndex)
+        container.setAttribute("data-itemindex", this.itemIndex)
         container.appendChild(title);
         container.appendChild(album);
         container.appendChild(artist)

@@ -1,0 +1,28 @@
+html, body {
+    height: 100%;
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Roboto', sans-serif;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+#queueContainer {
+    display: flex;
+    flex-direction: column-reverse;
+    overflow-y: auto;
+    height: 100vh; 
+    scrollbar-width: none;
+    margin: 10px
+}
+
+.queueItem {
+    background-color: green;
+    margin: 5px 0;
+    padding: 5px;; 
+}
+
