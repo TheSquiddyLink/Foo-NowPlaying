@@ -211,6 +211,26 @@ class BeefWeb {
         if(this.elements.player) this.elements.player.element.addEventListener("animationend", () => this.elements.player.setStyle("animation","none"))
     }
 
+    async queueInit(){
+        try {
+            await fetch(this.root+this.options.player)
+            this.status = STATUS.online
+        } catch {
+            this.status = STATUS.offline
+        }
+        if(this.status == STATUS.offline){
+            console.log("Attempting to reconnect")
+            this.reconnectInterval  = setInterval(async () => {
+                await this.connect();
+                if(this.status == STATUS.online){
+                    clearInterval(this.reconnectInterval)
+                    console.log("Back online!")
+                    this.startQueue();
+                }
+            },this.reconnectFrequency)
+        }
+        this.queueContainer = document.getElementById("queueContainer")
+    }
     /**
      * @private
      */
@@ -362,6 +382,7 @@ class BeefWeb {
     }   
 
     startQueue(){
+        console.log(this.root + this.options.queue + this.getColumnsQuery())
         if(this.status == STATUS.offline) return;
         this.queueWorker.postMessage({
             url: this.root + this.options.queue + this.getColumnsQuery(),
@@ -369,12 +390,28 @@ class BeefWeb {
         })
         this.queueWorker.onmessage = this.updateQueue.bind(this);
     }
-
-    updateQueue(data){
-        console.log(data.data)
-    }
-
+    updateQueue(data) {
+        const newQueue = data.data.playQueue.map((item) => Item.queueItem(item));
     
+        const newQueueIndices = newQueue.map(item => item.songIndex);
+    
+        this.playQueue.forEach((item, index) => {
+            if (!newQueueIndices.includes(item.songIndex)) {
+                const itemElement = document.querySelector(`[data-songindex="${item.songIndex}"]`);
+                if (itemElement) {
+                    itemElement.remove();
+                }
+                this.playQueue.splice(index, 1);
+            }
+        });
+    
+        newQueue.forEach(item => {
+            if (!this.playQueue.some(existingItem => existingItem.songIndex === item.songIndex)) {
+                this.queueContainer.appendChild(item.createQueueItem());
+                this.playQueue.push(item);
+            }
+        });
+    }
 }
 
 class Item {
@@ -453,6 +490,13 @@ class Item {
         if (!data?.player?.activeItem) return;
         let activeItem = data.player.activeItem;
 
+        this.setWithActiveItem(activeItem)
+
+        this.playbackState = data.player.playbackState;
+    }
+
+    setWithActiveItem(activeItem){
+        
         this.playlist.id = activeItem.playlistId;
         this.playlist.index = activeItem.playlistIndex;
         this.songIndex = activeItem.index;
@@ -491,8 +535,12 @@ class Item {
         this.columns.length = activeItem.columns?.[7] ?? previousValues.columns.length;
         this.columns.elapsed = activeItem.columns?.[8] ?? previousValues.columns.elapsed;
         this.columns.path = activeItem.columns?.[9] ?? previousValues.columns.path;
+    }
 
-        this.playbackState = data.player.playbackState;
+    static queueItem(data){
+        const item = new Item();
+        item.setWithActiveItem(data);
+        return item;
     }
 
     /**
@@ -538,7 +586,25 @@ class Item {
             this.color === item.color
         )
     }
-    
+    createQueueItem(){
+        console.log(this)
+        const container = document.createElement("div")
+        
+        const title = document.createElement("p");
+        title.innerHTML = this.columns.title;
+
+        const album = document.createElement("p");
+        album.innerHTML = this.columns.album;
+
+        const artist = document.createElement("p");
+        artist.innerHTML = this.columns.artist;
+        container.setAttribute("data-songindex", this.songIndex)
+        container.appendChild(title);
+        container.appendChild(album);
+        container.appendChild(artist)
+
+        return container
+    }
 }
 
 class MyElement {
