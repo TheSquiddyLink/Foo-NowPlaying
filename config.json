@@ -2,5 +2,11 @@
     "frequency": 500,
     "reconnectFrequency": 2000,
     "fadeDistance": 1,
-    "fadeDuration": 2000
+    "fadeDuration": 2000,
+    "colors": {
+        "textColor": "auto",
+        "progressColor": "auto",
+        "progressAccent": "auto",
+        "backgroundColor": "auto"
+    }
 }

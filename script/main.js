@@ -66,6 +66,16 @@ class BeefWeb {
     type = "normal"
     /**@private */
     colorThief = new ColorThief();
+    colorOverrides = {
+        count: 0,
+        values: {
+            textColor: "auto",
+            progressColor: "auto",
+            progressAccent: "auto",
+            backgroundColor: "auto",
+        }
+    }
+
 
     constructor(port){
         this.port = port
@@ -129,27 +139,36 @@ class BeefWeb {
         this.elements.data.album.bind(this.activeItem.columns, "album",  "text")
     }
 
-    async init(){
+    async init() {
+        await this.loadConfig();
         
-        // await this.loadConfig();
         this.elements.player.setElement(document.getElementById("player"));
-
-        let type = this.elements.player.element.getAttribute("type")
-        this.type = type ?? this.type
-
-        console.log(this.type)
-        this.elements.data.albumArt.setElement(document.getElementById("playerArt"));
-        this.elements.data.title.setElement(document.getElementById("playerTitle"));
-        this.elements.data.artist.setElement(document.getElementById("playerArtist"));
-        this.elements.data.album.setElement(document.getElementById("playerAlbum"));
-        this.elements.data.container.setElement(document.getElementById("playerData"))
-
-        this.elements.progress.current.setElement(document.getElementById("progressCurrent"));
-        this.elements.progress.total.setElement(document.getElementById("progressTotal"));
-        this.elements.progress.bar.setElement(document.getElementById("progressBar"));
-
-        this.elements.progress.container.setElement(document.getElementById("progressBarContainer"))
-
+        this.type = this.elements.player.element.getAttribute("type") ?? this.type;
+        
+        console.log(this.type);
+    
+        const elementMappings = {
+            data: {
+                albumArt: "playerArt",
+                title: "playerTitle",
+                artist: "playerArtist",
+                album: "playerAlbum",
+                container: "playerData"
+            },
+            progress: {
+                current: "progressCurrent",
+                total: "progressTotal",
+                bar: "progressBar",
+                container: "progressBarContainer"
+            }
+        };
+    
+        for (const [category, elements] of Object.entries(elementMappings)) {
+            for (const [key, id] of Object.entries(elements)) {
+                this.elements[category][key].setElement(document.getElementById(id));
+            }
+        }
+    
         await this.connect()
         if(this.status == STATUS.offline){
             console.log("Attempting to reconnect")
@@ -171,6 +190,9 @@ class BeefWeb {
         if(this.elements.player) this.elements.player.element.addEventListener("animationend", () => this.elements.player.setStyle("animation","none"))
     }
 
+    /**
+     * @private
+     */
     async loadConfig(){
         const response = await fetch('./config.json');
         const data = await response.json();
@@ -179,6 +201,13 @@ class BeefWeb {
         this.reconnectFrequency = data.reconnectFrequency;
         this.fadeDistance = data.fadeDistance;
         this.fadeDuration = data.fadeDuration;
+
+        this.colorOverrides.values = data.colors;
+        let count = 0;
+        for(let value of Object.values(this.colorOverrides.values)){
+            if(value != "auto") count+=1;
+        }
+        this.colorOverrides.count = count;
     }
     async connect(){
         console.log("Connecting: ", this.activeItem)
@@ -196,7 +225,8 @@ class BeefWeb {
        
         this.elements.data.albumArt.setAttribute("src", this.root + this.options.artwork + "?a=" + new Date().getTime());
 
-        if(this.elements.player && this.elements.player.element.style.animation != this.getAnimation()) this.fade()
+        if(this.elements.player && this.elements.player.element.style.animation != this.getAnimation()) this.fade();
+        this.checkLength();
         this.getCommonColor();
         this.updateTime();
     }
@@ -207,12 +237,12 @@ class BeefWeb {
         this.elements.progress.total.setText(this.formatTime(this.activeItem.time.total));
         this.elements.progress.bar.setStyle("width", this.activeItem.time.percent()+"%")
 
-        this.elements.player.setStyle("backgroundColor", this.activeItem.color)
+        this.elements.player.setStyle("backgroundColor", this.activeItem.backgroundColor)
         this.elements.player.setStyle("color", this.activeItem.textColor);
         
-        this.elements.progress.container.setStyle("backgroundColor", this.activeItem.allColors[2]);
+        this.elements.progress.container.setStyle("backgroundColor", this.activeItem.progressAccent);
 
-        this.elements.progress.bar.setStyle("backgroundColor", this.activeItem.textColor)
+        this.elements.progress.bar.setStyle("backgroundColor", this.activeItem.progressColor)
     }
 
     /**@private */
@@ -234,13 +264,28 @@ class BeefWeb {
 
     /**@private */
     getCommonColor(){
+        if (Object.values(this.colorOverrides.values).every(color => color !== "auto")) {
+            console.log("All set");
+            Object.assign(this.activeItem, this.colorOverrides.values);
+            return;
+        }        
         console.log("Getting color")
         const onLoad = (img) => {
             try {
-                this.activeItem.setColor(this.colorThief.getPalette(img,5));
+                this.activeItem.setColor(this.colorThief.getPalette(img,4));
+
             } catch (error) {
                 console.error(error);
             }
+            if(this.colorOverrides.count > 0){
+                Object.keys(this.colorOverrides.values).forEach((key) => {
+                    let value = this.colorOverrides.values[key];
+                    if (value && value !== "auto") {
+                        this.activeItem[key] = this.colorOverrides.values[key];
+                    }
+                });       
+            }
+              
         }
         const img = this.elements.data.albumArt.element;
         if(!img) return
@@ -307,6 +352,9 @@ class Item {
         this.color = null;
         this.allColors = [];
         this.textColor = "black"
+        this.progressColor = "black"
+        this.progressAccent = "black"
+        this.backgroundColor = "black"
     }
 
 
@@ -319,8 +367,12 @@ class Item {
         const color = colors.length > 0 ? colors[0] : [128, 128, 128];
         this.allColors = colors.map((item) => `rgb(${item.join(",")})`);
         this.color = `rgb(${color.join(",")})`;
+        this.backgroundColor = this.allColors[0]
         this.textColor = this.allColors[1]
+        this.progressColor = this.allColors[1]
+        this.progressAccent = this.allColors[2];
     }
+    
 
 
     /**
