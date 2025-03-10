@@ -400,7 +400,10 @@ class BeefWeb {
             if (!newQueueIndices.includes(item.itemIndex)) {
                 const itemElement = document.querySelector(`[data-itemindex="${item.itemIndex}"]`);
                 if (itemElement) {
-                    itemElement.remove();
+                    itemElement.classList.add("queueRemove");
+                    itemElement.addEventListener("animationend", () => {
+                        itemElement.remove();
+                    })
                 }
                 this.playQueue.splice(index, 1);
             }

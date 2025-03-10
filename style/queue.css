@@ -23,6 +23,22 @@ body {
 .queueItem {
     background-color: green;
     margin: 5px 0;
-    padding: 5px;; 
+    padding: 5px;
+    height: 150px;
+    transition: opacity 3s, transform 3s;
+    display: flex;
+    flex-direction: column;
 }
 
+.queueRemove {
+    background-color: red;
+    animation: remove 3s forwards;
+}
+
+@keyframes remove {
+    to {
+        opacity: 0;
+        transform: translateY(100%);
+        margin-top: -160px
+    }
+}
