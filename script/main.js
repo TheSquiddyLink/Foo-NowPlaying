@@ -53,6 +53,7 @@ class BeefWeb {
             title: new MyElement(),
             artist: new MyElement(),
             album: new MyElement(),
+            container: new MyElement()
         },
         progress: {
             current: new MyElement(),
@@ -141,6 +142,7 @@ class BeefWeb {
         this.elements.data.title.setElement(document.getElementById("playerTitle"));
         this.elements.data.artist.setElement(document.getElementById("playerArtist"));
         this.elements.data.album.setElement(document.getElementById("playerAlbum"));
+        this.elements.data.container.setElement(document.getElementById("playerData"))
 
         this.elements.progress.current.setElement(document.getElementById("progressCurrent"));
         this.elements.progress.total.setElement(document.getElementById("progressTotal"));
@@ -267,6 +269,29 @@ class BeefWeb {
         }
     }
 
+    /**
+     * 
+     * @param {?HTMLElement} element
+     */
+    checkLength(element) {
+        if(!element){
+            console.log("Defaulting")
+            this.checkLength(this.elements.data.album.element)
+            this.checkLength(this.elements.data.title.element)
+            this.checkLength(this.elements.data.artist.element)
+            return;
+        }
+        console.log("Checking Length")
+        console.log(element)
+        const max = this.elements.data.container.element.offsetWidth;
+        const current = element.offsetWidth;
+        console.log(max, current)
+        if(current > max){
+            element.classList.add("scrolling")
+        } else {
+            element.classList.remove("scrolling")
+        }
+    }   
 }
 
 class Item {
@@ -484,4 +509,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await beef.init();
 
     beef.start();
+
+    window.addEventListener("resize",() => beef.checkLength())
 })
