@@ -100,22 +100,30 @@ class BeefWeb {
             this.status = STATUS.offline;
         }
         
-
-        if(this.compareAll()){
+        if(!this.validate()){
+            this.elements.player.element.style.opacity = 0;
+        } else if(this.compareAll()){
             console.log("No changes detected");
+            this.elements.player.element.style.opacity = 1;
         } else if(this.compareTrack()){
             console.log("Only time changed");
+            this.elements.player.element.style.opacity = 1;
             this.updateTime();
         } else {
             console.log("Track changed");
+            this.elements.player.element.style.opacity = 1;
             this.updateAll();
         }
 
-        if(this.type == "normal" && this.activeItem.time.current >= this.activeItem.time.total - this.fadeDistance){
+        if(this.validate() && this.type == "normal" && this.activeItem.time.current >= this.activeItem.time.total - this.fadeDistance){
             this.fade()
         }
 
         this.previousItem.from(this.activeItem);
+    }
+
+    validate(){
+        return this.activeItem.playbackState != "stopped";
     }
 
     start(){
@@ -419,19 +427,42 @@ class Item {
         this.playlist.index = activeItem.playlistIndex;
         this.songIndex = activeItem.index;
 
-        this.time.current = activeItem.position ?? '0:00';
-        this.time.total = activeItem.duration ?? '0:00';
+        // Store previous values
+        const previousValues = {
+            time: {
+                current: this.time.current,
+                total: this.time.total
+            },
+            columns: {
+                isPlaying: this.columns.isPlaying,
+                isPaused: this.columns.isPaused,
+                albumArtist: this.columns.albumArtist,
+                album: this.columns.album,
+                artist: this.columns.artist,
+                title: this.columns.title,
+                trackNumber: this.columns.trackNumber,
+                length: this.columns.length,
+                elapsed: this.columns.elapsed,
+                path: this.columns.path
+            }
+        };
 
-        this.columns.isPlaying = activeItem.columns?.[0] ?? false;
-        this.columns.isPaused = activeItem.columns?.[1] ?? false;
-        this.columns.albumArtist = activeItem.columns?.[2] ?? "Unknown";
-        this.columns.album = activeItem.columns?.[3] ?? "Unknown";
-        this.columns.artist = activeItem.columns?.[4] ?? "Unknown";
-        this.columns.title = activeItem.columns?.[5] ?? "Unknown";
-        this.columns.trackNumber = activeItem.columns?.[6] ?? 0;
-        this.columns.length = activeItem.columns?.[7] ?? 0;
-        this.columns.elapsed = activeItem.columns?.[8] ?? 0;
-        this.columns.path = activeItem.columns?.[9] ?? "";
+        // Update values with fallback to previous ones if invalid
+        this.time.current = activeItem.position ?? previousValues.time.current;
+        this.time.total = activeItem.duration ?? previousValues.time.total;
+
+        this.columns.isPlaying = activeItem.columns?.[0] ?? previousValues.columns.isPlaying;
+        this.columns.isPaused = activeItem.columns?.[1] ?? previousValues.columns.isPaused;
+        this.columns.albumArtist = activeItem.columns?.[2] ?? previousValues.columns.albumArtist;
+        this.columns.album = activeItem.columns?.[3] ?? previousValues.columns.album;
+        this.columns.artist = activeItem.columns?.[4] ?? previousValues.columns.artist;
+        this.columns.title = activeItem.columns?.[5] ?? previousValues.columns.title;
+        this.columns.trackNumber = activeItem.columns?.[6] ?? previousValues.columns.trackNumber;
+        this.columns.length = activeItem.columns?.[7] ?? previousValues.columns.length;
+        this.columns.elapsed = activeItem.columns?.[8] ?? previousValues.columns.elapsed;
+        this.columns.path = activeItem.columns?.[9] ?? previousValues.columns.path;
+
+        this.playbackState = data.player.playbackState;
     }
 
     /**
