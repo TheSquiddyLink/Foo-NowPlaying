@@ -45,6 +45,8 @@ class BeefWeb {
     /**@private */
     worker = new Worker("./script/worker.js");
 
+    font = "auto";
+
     /**@private */
     elements = {
         player: new MyElement(),
@@ -176,6 +178,8 @@ class BeefWeb {
                 this.elements[category][key].setElement(document.getElementById(id));
             }
         }
+
+        if(this.font && this.font !== "auto") this.elements.player.setStyle("font-family", this.font)
     
         await this.connect()
         if(this.status == STATUS.offline){
@@ -216,6 +220,8 @@ class BeefWeb {
             if(value != "auto") count+=1;
         }
         this.colorOverrides.count = count;
+
+        this.font = data.font;
     }
     async connect(){
         console.log("Connecting: ", this.activeItem)

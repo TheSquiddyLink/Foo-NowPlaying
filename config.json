@@ -8,5 +8,6 @@
         "progressColor": "auto",
         "progressAccent": "auto",
         "backgroundColor": "auto"
-    }
+    },
+    "font": "auto"
 }
