@@ -47,18 +47,18 @@ class BeefWeb {
 
     /**@private */
     elements = {
-        player: new Element(),
+        player: new MyElement(),
         data: {
-            albumArt: new Element(),
-            title: new Element(),
-            artist: new Element(),
-            album: new Element(),
+            albumArt: new MyElement(),
+            title: new MyElement(),
+            artist: new MyElement(),
+            album: new MyElement(),
         },
         progress: {
-            current: new Element(),
-            total: new Element(),
-            bar: new Element(),
-            container: new Element(),
+            current: new MyElement(),
+            total: new MyElement(),
+            bar: new MyElement(),
+            container: new MyElement(),
         }
     }
 
@@ -114,13 +114,22 @@ class BeefWeb {
             url: this.root + this.options.player + this.getColumnsQuery(),
             interval: this.frequency
         });
-
+        console.log(this.activeItem)
+       
         this.worker.onmessage = this.update.bind(this);
+        this.bindAll()
         this.updateAll();
     }
 
-    async init(){
+    /**@private */
+    bindAll(){
+        this.elements.data.title.bind(this.activeItem.columns, "title", "text")
+        this.elements.data.artist.bind(this.activeItem.columns, "artist", "text" )
+        this.elements.data.album.bind(this.activeItem.columns, "album",  "text")
+    }
 
+    async init(){
+        
         // await this.loadConfig();
         this.elements.player.setElement(document.getElementById("player"));
 
@@ -170,8 +179,9 @@ class BeefWeb {
         this.fadeDuration = data.fadeDuration;
     }
     async connect(){
+        console.log("Connecting: ", this.activeItem)
         try {
-            await fetch(this.root+this.options.player);
+            await this.update({data: await ((await fetch(this.root+this.options.player)).json())});
         } catch (error){
             this.status = STATUS.offline;
             return;
@@ -181,10 +191,7 @@ class BeefWeb {
     
     /**@private */
     updateAll(){
-        this.elements.data.title.setText(this.activeItem.columns.title);
-        this.elements.data.artist.setText(this.activeItem.columns.artist);
-        this.elements.data.album.setText(this.activeItem.columns.album)
-        
+       
         this.elements.data.albumArt.setAttribute("src", this.root + this.options.artwork + "?a=" + new Date().getTime());
 
         if(this.elements.player && this.elements.player.element.style.animation != this.getAnimation()) this.fade()
@@ -396,13 +403,15 @@ class Item {
     
 }
 
-class Element {
+class MyElement {
 
 
     /**
      * @type {?HTMLElement}
      */
     element;
+
+    binds = {}
     /**
      * 
      * @param {HTMLElement} element 
@@ -411,7 +420,41 @@ class Element {
         this.element = element;
     }
 
+    /**
+     * Binds a variable to an attribute, text, or style property.
+     * @param {object} obj - The object containing the property.
+     * @param {string} key - The property name to bind.
+     * @param {string} type - The type of binding ('attribute', 'text', 'style').
+     * @param {string} target - The target attribute/property name.
+     * 
+     */
+    bind(obj, key, type, target) {
+        this.binds[key] = obj[key]; // Save original reference
 
+        Object.defineProperty(obj, key, {
+            get: () => this.binds[key],
+            set: (newValue) => {
+                this.binds[key] = newValue;
+                if (type === "attribute") {
+                    this.setAttribute(target, newValue);
+                } else if (type === "text") {
+                    this.setText(newValue);
+                } else if (type === "style") {
+                    this.setStyle(target, newValue);
+                }
+            },
+            configurable: true
+        });
+
+        // Initialize the binding with the current value
+        if (type === "attribute") {
+            this.setAttribute(target, obj[key]);
+        } else if (type === "text") {
+            this.setText(obj[key]);
+        } else if (type === "style") {
+            this.setStyle(target, obj[key]);
+        }
+    }
     /**
      * @param {string} attribute 
      * @param {*} value 
