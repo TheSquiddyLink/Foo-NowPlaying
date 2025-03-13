@@ -1,7 +1,9 @@
-# Foobar Now Playing (Alpha 0.1.0)
+# Foobar Now Playing (Dev 0.2.0)
 ![GitHub License](https://img.shields.io/github/license/TheSquiddyLink/Foo-NowPlaying)
-![GitHub Release Date](https://img.shields.io/github/release-date/TheSquiddyLink/Foo-NowPlaying)
+![GitHub Release](https://img.shields.io/github/v/release/TheSquiddyLink/Foo-NowPlaying?include_prereleases)
 ![GitHub last commit](https://img.shields.io/github/last-commit/TheSquiddyLink/Foo-NowPlaying)
+
+*NOTE* this is a dev commit, please visit https://github.com/TheSquiddyLink/Foo-NowPlaying/releases for a Stable or Alpha release. Downloading the code directly from this branch may result in the website not functioning properly.
 
 This project provides a customizable website that can be directly incorporated within OBS, and can communicate with Foobar2000 without the need of an external server.
 
