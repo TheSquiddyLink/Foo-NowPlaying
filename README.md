@@ -1,6 +1,13 @@
-# Foobar Now Playing
+# Foobar Now Playing (Alpha 0.1.0)
+![GitHub License](https://img.shields.io/github/license/TheSquiddyLink/Foo-NowPlaying)
+![GitHub Release Date](https://img.shields.io/github/release-date/TheSquiddyLink/Foo-NowPlaying)
+![GitHub last commit](https://img.shields.io/github/last-commit/TheSquiddyLink/Foo-NowPlaying)
 
 This project provides a customizable website that can be directly incorporated within OBS, and can communicate with Foobar2000 without the need of an external server.
+
+This project is currently in alpha, things may not work fully or have placeholder colors, sizes, and images. 
+
+Check for the newest release here: https://github.com/TheSquiddyLink/Foo-NowPlaying/releases
 
 ## Installation
 
@@ -8,6 +15,7 @@ To install this project you will need the following:
 
 * [Foobar2000](https://www.foobar2000.org) (Tested on V2.24 x86 - Portable)
 * [Foo Beefweb](https://github.com/hyperblast/Beefweb) (Tested on v0.10)
+* [OBS](https://obsproject.com) (Tested on 31.0.2)
 * This Project (Source Code or GitHub release)
 * Windows 10/11 (Tested on Windows 10 Home)
 
@@ -46,8 +54,7 @@ We are done with Beefweb for now, but will return to it later.
 
 ### Foobar Now Playing
 
-<!-- TODO: Add links to this github -->
-There are two ways to use this project, the recommend way is to download the newest release on this GitHub, or by downloading the source code manually or with git. 
+There are two ways to use this project, the recommend way is to download the newest release on this [GitHub](https://github.com/TheSquiddyLink/Foo-NowPlaying/), or by downloading the source code manually or with git. 
 
 After downloading, note the file path of the extracted folder. Navigate to your foobar2000 Installation, and head to profile → Beefweb,and create a new file called `config.json`.
 
@@ -76,6 +83,26 @@ Only if you are using your own server and need CORS, input the following:
 Please read [documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) to find out how to set up CORS headers properly.
 
 Once this has been done restart foobar2000, and navigate to http://localhost:8880/nowplaying. When a song is playing you should now see information about the song.
+
+### OBS
+To display the now playing information within OBS, you will either need to add a new browser source and use the localhost url, or link to the `HTML` file, and allow CORS.
+
+**LocalHost** - Recommended
+1. Open OBS
+2. Add New Source
+3. Browser Source
+4. Set URL to `http://localhost:8880/nowplaying` (If you have your own server you must allow CORS)
+5. Set width to `650` for best results
+6. Set height to  `400` for best results
+
+**Directly to HTML** - Not Recommended
+1. Open OBS
+2. Add New Source
+3. Browser Source
+4. Check local file
+5. Paste or browse for the full file path of the `index.html` file
+5. Set width to `650` for best results
+6. Set height to  `400` for best results
 
 ## Configuration
 The website allows for customization, including colors, timing, and fonts. Below is an explanation of all configurable options.
